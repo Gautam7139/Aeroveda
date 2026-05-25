@@ -4,7 +4,8 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from streamlit.components.v1 import html
+# Import the secure browser evaluation tool
+from streamlit_js_eval import get_geolocation
 
 # --- WEBSITE PAGE CONFIGURATION ---
 st.set_page_config(page_title="AeroVeda AI", page_icon="🌾", layout="centered")
@@ -18,66 +19,29 @@ st.write("---")
 # --- USER INPUT SECTION ---
 st.header("📍 Step 1: Locate Your Farm")
 
-# Initialize session state variables to hold GPS coordinates if found
-if "gps_lat" not in st.session_state:
-    st.session_state.gps_lat = None
-if "gps_lon" not in st.session_state:
-    st.session_state.gps_lon = None
+# Securely request browser coordinates using the plugin framework
+st.markdown("### Option A: Use Device GPS")
+gps_location = get_geolocation()
 
-# Invisible JavaScript component that triggers browser's native "Find My Location" popup
-js_geo = """
-<script>
-function getLocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(showPosition, showError);
-  } else {
-    window.parent.postMessage({type: "GEO_ERROR", msg: "Geolocation not supported"}, "*");
-  }
-}
-function showPosition(position) {
-  window.parent.postMessage({
-    type: "GEO_SUCCESS", 
-    lat: position.coords.latitude, 
-    lon: position.coords.longitude
-  }, "*");
-}
-function showError(error) {
-  window.parent.postMessage({type: "GEO_ERROR", msg: error.message}, "*");
-}
-</script>
-<button onclick="getLocation()" style="
-    background-color: #2e7d32; 
-    color: white; 
-    border: none; 
-    padding: 10px 20px; 
-    border-radius: 8px; 
-    cursor: pointer; 
-    font-weight: bold;
-    width: 100%;
-    font-size: 14px;
-">📍 Use My Exact GPS Location</button>
-"""
+lat, lon = None, None
 
-# Render the custom GPS Button
-html(js_geo, height=50)
+if gps_location:
+    st.success("✅ GPS Signal Locked Connected to Browser Location Services!")
+    lat = gps_location['coords']['latitude']
+    lon = gps_location['coords']['longitude']
+else:
+    st.info("💡 To use your exact field coordinates, allow location permissions when prompted by your browser.")
 
-# Listen for the message sent back by the browser's JavaScript
-from streamlit import runtime
-from streamlit.runtime.scriptrunner import get_script_run_ctx
-
-# Fallback text input so they can still type a name manually
+st.markdown("---")
+st.markdown("### Option B: Manual Search")
 location = st.text_input("Or, type your Village, Town, or Landmark Name manually:", "Kanha Shanti Vanam")
 
-# Create a master trigger: True if they click the run button
-run_audit = st.button("Run AI Micro-Climate Audit")
-
-if run_audit:
+# Create a master trigger button
+if st.button("Run AI Micro-Climate Audit"):
     with st.spinner("Analyzing satellite matrix..."):
         try:
-            lat, lon = None, None
-            
-            # Check if text input should be used
-            if location and location != "Kanha Shanti Vanam":
+            # If the user typed a specific manual location name, use that geocoding path instead
+            if location and location != "Kanha Shanti Vanam" and not lat:
                 geo_url = f"https://nominatim.openstreetmap.org/search?q={location}&format=json&limit=1"
                 headers = {"User-Agent": "AeroVedaApp/1.0"}
                 geo_res = requests.get(geo_url, headers=headers).json()
@@ -85,9 +49,9 @@ if run_audit:
                     lat = geo_res[0]["lat"]
                     lon = geo_res[0]["lon"]
             
-            # Default fallback to Kanha Shanti Vanam coordinates if nothing else is specified
+            # Master absolute default if no coordinates were provided anywhere
             if lat is None or lon is None:
-                lat, lon = 17.2917, 78.2250  # Precise coordinates for Kanha Shanti Vanam area
+                lat, lon = 17.2917, 78.2250  # Default to Kanha Shanti Vanam tracking zone
             
             # --- Live Forecast Stream ---
             forecast_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m&timezone=auto"
