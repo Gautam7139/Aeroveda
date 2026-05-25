@@ -30,11 +30,12 @@ if st.button("Run AI Micro-Climate Audit"):
                 lat = geo_res[0]["lat"]
                 lon = geo_res[0]["lon"]
                 
-                # 2. Live Forecast Stream
-                forecast_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
+                # 2. Live Forecast Stream (Now pulling absolute real-time live current metrics)
+                forecast_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m&timezone=auto"
                 f_res = requests.get(forecast_url).json()
-                current_temp = f_res["current_weather"]["temperature"]
-                current_humidity = 42.0  # Safe default baseline fallback for localized tracking
+                
+                current_temp = f_res["current"]["temperature_2m"]
+                current_humidity = f_res["current"]["relative_humidity_2m"]
                 
                 # 3. Fetch 2025 Historical Archive for Machine Learning Training
                 archive_url = f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lon}&start_date=2025-01-01&end_date=2025-12-31&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_mean&timezone=auto"
