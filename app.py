@@ -15,20 +15,21 @@ st.subheader("Satellite-Driven Micro-Climate Analytics")
 st.markdown("Supporting **UN SDG 2: Zero Hunger** by empowering rural yields through predictive machine learning.")
 st.write("---")
 
-# --- SIDEBAR CONFIGURATION TO AVOID INTERFACE LOOPS ---
+# --- SIDEBAR SETTINGS ---
 st.sidebar.header("⚙️ Location Settings")
 mode = st.sidebar.radio("Choose Mode:", ["Type Location Manually", "Use Device GPS"])
 
-lat, lon = None, None
-location_name = ""
+# Deep accurate default target: Kanha Shanti Vanam coordinates (Telangana)
+lat, lon = 17.2917, 78.2250  
+location_display = "Kanha Shanti Vanam (Telangana Base)"
 
 # --- PATHWAY 1: MANUAL TYPING ---
 if mode == "Type Location Manually":
     st.header("📍 Step 1: Type Your Farm Location")
     location_name = st.text_input("Enter your Village, Town, or Landmark Name:", "Kanha Shanti Vanam")
     
-    # Geocode the typed text immediately to get real coordinates
-    if location_name:
+    # If the user types something other than the default, search for it
+    if location_name and location_name != "Kanha Shanti Vanam":
         try:
             geo_url = f"https://nominatim.openstreetmap.org/search?q={location_name}&format=json&limit=1"
             headers = {"User-Agent": "AeroVedaApp/1.0"}
@@ -36,11 +37,14 @@ if mode == "Type Location Manually":
             if geo_res:
                 lat = float(geo_res[0]["lat"])
                 lon = float(geo_res[0]["lon"])
-                st.success(f"📍 Location Found! Lat: {lat:.4f}, Lon: {lon:.4f}")
+                location_display = location_name
+                st.success(f"📍 Map Grid Found! Lat: {lat:.4f}, Lon: {lon:.4f}")
             else:
-                st.error("Location name not recognized by global satellites. Defaulting coordinates.")
+                st.error("Location name not recognized. Using default baseline grid.")
         except Exception:
             pass
+    else:
+        st.success("📍 Locked to exact Kanha Shanti Vanam coordinates.")
 
 # --- PATHWAY 2: AUTOMATIC GPS ---
 else:
@@ -51,26 +55,23 @@ else:
     if gps_location and 'coords' in gps_location:
         lat = gps_location['coords']['latitude']
         lon = gps_location['coords']['longitude']
+        location_display = "Your Current Device Location"
         st.success(f"✅ GPS Signal Locked! Lat: {lat:.4f}, Lon: {lon:.4f}")
     else:
-        st.warning("Awaiting GPS signal authorization from your device...")
-
-# Absolute fallback safeguard if things are still loading
-if lat is None or lon is None:
-    lat, lon = 17.2917, 78.2250
-    location_name = "Kanha Shanti Vanam (Fallback)"
+        st.warning("Warming up GPS module... Awaiting authorization from your browser.")
 
 # --- TRIGGER AUDIT BUTTON ---
 st.write("---")
 if st.button("Run AI Micro-Climate Audit"):
     with st.spinner("Connecting to live satellite telemetry..."):
         try:
-            # 1. Fetch 100% Real-Time Live Current Weather Data
+            # 1. Fetch 100% Real-Time Live Current Weather Data with explicit current variables
             forecast_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m&timezone=auto"
             f_res = requests.get(forecast_url).json()
             
-            current_temp = f_res["current"]["temperature_2m"]
-            current_humidity = f_res["current"]["relative_humidity_2m"]
+            # Explicit dictionary parsing for Open-Meteo's standard response format
+            current_temp = float(f_res["current"]["temperature_2m"])
+            current_humidity = float(f_res["current"]["relative_humidity_2m"])
             
             # 2. Fetch 2025 Historical Archive for Machine Learning Training
             archive_url = f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lon}&start_date=2025-01-01&end_date=2025-12-31&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_mean&timezone=auto"
@@ -97,7 +98,7 @@ if st.button("Run AI Micro-Climate Audit"):
             
             # 5. Render Dashboard Interface
             st.header("📊 Live AI Analytics Report")
-            st.caption(f"Coordinates Scanned: Latitude {lat:.4f}, Longitude {lon:.4f}")
+            st.caption(f"Target: {location_display} | Coordinates: {lat:.4f}, {lon:.4f}")
             
             col1, col2 = st.columns(2)
             col1.metric("🌡️ Current Temp", f"{current_temp} °C")
