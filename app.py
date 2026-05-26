@@ -108,7 +108,7 @@ if run_audit:
             predicted_stress_score = float(ai_engine.predict(live_input)[0])
             
             # --- 📊 THE MULTI-DIMENSIONAL COMMAND GRID GENERATION ---
-            st.markdown(f"## 🛸 CURRENT SATELLITE TARGET: **{location_display}**")
+            st.markdown(f"## 🛸 CURRENT SATELLITE TARGET: {location_display}")
             
             # Nested Bordered Information Pods
             grid_col1, grid_col2, grid_col3 = st.columns(3)
@@ -128,11 +128,11 @@ if run_audit:
             
             st.write("---")
             
-            # Intelligence Readout Core Alert Display (FIXED: Cleanly closed quote string)
+            # Intelligence Readout Core Alert Display
             if predicted_stress_score > 48:
-                st.error(f"🚨 **CRITICAL AGRO-RISK SYSTEM EXTRAPOLATION WARNING** - The AI matrix has registered a target stress factor of {predicted_stress_score:.1f}/100. Environmental moisture signatures match accelerated crop transpiration degradation loops. Execute localized solar canopy shielding deployment and activate micro-drip drone irrigation sequences immediately.")
+                st.error(f"🚨 CRITICAL AGRO-RISK SYSTEM EXTRAPOLATION WARNING - The AI matrix has registered a target stress factor of {predicted_stress_score:.1f}/100. Environmental moisture signatures match accelerated crop transpiration degradation loops. Execute localized solar canopy shielding deployment and activate micro-drip drone irrigation sequences immediately.")
             else:
-                st.success(f"🌱 **OPTIMAL LOCAL ECOSYSTEM EQUILIBRIUM SECURED** - The AI matrix has registered a target stress factor of {predicted_stress_score:.1f}/100. Micro-climatic metadata vectors match optimal environmental sustainability matrices. Zero local structural modifications requested.")
+                st.success(f"🌱 OPTIMAL LOCAL ECOSYSTEM EQUILIBRIUM SECURED - The AI matrix has registered a target stress factor of {predicted_stress_score:.1f}/100. Micro-climatic metadata vectors match optimal environmental sustainability matrices. Zero local structural modifications requested.")
                 
             st.write("---")
             
@@ -142,4 +142,13 @@ if run_audit:
             
             with tab_thermal:
                 with st.container(border=True):
-                    st.markdown("
+                    st.markdown("#### Historical Satellite Temperature Curves (365-Day Cycle)")
+                    st.line_chart(df[['Thermal Max', 'Thermal Min']])
+                    
+            with tab_stress:
+                with st.container(border=True):
+                    st.markdown("#### AI Machine Learning Discovered Stress Shading Map")
+                    st.area_chart(df['Biomass_Stress_Index'])
+                    
+        except Exception as e:
+            st.error(f"🚨 System Grid Component Disconnection Protocol: {e}")
