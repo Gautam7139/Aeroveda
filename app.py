@@ -128,6 +128,18 @@ if run_audit:
             
             st.write("---")
             
-            # Intelligence Readout Core Alert Display
+            # Intelligence Readout Core Alert Display (FIXED: Cleanly closed quote string)
             if predicted_stress_score > 48:
-                st.error(f"🚨 **CRITICAL AGRO-RISK SYSTEM EXTR
+                st.error(f"🚨 **CRITICAL AGRO-RISK SYSTEM EXTRAPOLATION WARNING** - The AI matrix has registered a target stress factor of {predicted_stress_score:.1f}/100. Environmental moisture signatures match accelerated crop transpiration degradation loops. Execute localized solar canopy shielding deployment and activate micro-drip drone irrigation sequences immediately.")
+            else:
+                st.success(f"🌱 **OPTIMAL LOCAL ECOSYSTEM EQUILIBRIUM SECURED** - The AI matrix has registered a target stress factor of {predicted_stress_score:.1f}/100. Micro-climatic metadata vectors match optimal environmental sustainability matrices. Zero local structural modifications requested.")
+                
+            st.write("---")
+            
+            # High-Fidelity Data Display Tabs
+            st.subheader("📊 HIGH-DENSITY MODEL ARCHIVE RECOVERY DATA")
+            tab_thermal, tab_stress = st.tabs(["🌡️ THERMAL GRID FREQUENCY", "🧬 BIOMASS STRESS DEVIATIONS"])
+            
+            with tab_thermal:
+                with st.container(border=True):
+                    st.markdown("
