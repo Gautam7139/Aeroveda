@@ -10,7 +10,7 @@ from streamlit_js_eval import get_geolocation
 st.set_page_config(
     page_title="AeroVeda AI | Predictive Agro-Dashboard", 
     page_icon="🌾", 
-    layout="wide"  # Spreads out into a wide dashboard grid layout
+    layout="wide"
 )
 
 # --- HEADER BRANDING ---
@@ -23,7 +23,7 @@ st.write("---")
 st.sidebar.header("⚙️ Telemetry Controls")
 mode = st.sidebar.radio("Select Input Stream:", ["Type Location Manually", "Use Device GPS"])
 
-# Default coordinates: Kanha Shanti Vanam (Telangana)
+# Deep accurate default target: Kanha Shanti Vanam coordinates (Telangana)
 lat, lon = 17.2917, 78.2250  
 location_display = "Kanha Shanti Vanam Baseline"
 
@@ -51,7 +51,7 @@ else:
         lon = gps_location['coords']['longitude']
         location_display = "Live Hardware GPS Feed"
 
-# Display current coordinates summary in the sidebar using official metric blocks
+# Display current coordinates summary in the sidebar
 st.sidebar.metric("📡 Grid Latitude", f"{lat:.4f}° N")
 st.sidebar.metric("📡 Grid Longitude", f"{lon:.4f}° E")
 
@@ -63,14 +63,16 @@ with col_btn:
 if run_audit:
     with st.spinner("Synchronizing with orbital data arrays..."):
         try:
-            # 1. Fetch Real-time Current Weather Data
-            forecast_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&timezone=auto"
+            # 1. Fetch Real-time Current Weather Data (UPDATED: Requesting explicit dynamic current metrics)
+            forecast_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m&timezone=auto"
             f_res = requests.get(forecast_url).json()
             
-            if "current_weather" in f_res:
-                current_temp = float(f_res["current_weather"]["temperature"])
-                current_humidity = 58.0  
+            # Extract live temperature and live humidity directly from the satellite payload
+            if "current" in f_res:
+                current_temp = float(f_res["current"]["temperature_2m"])
+                current_humidity = float(f_res["current"]["relative_humidity_2m"])
             else:
+                # Emergency fallback numbers if the API fails entirely
                 current_temp, current_humidity = 31.2, 52.0
             
             # 2. Fetch Historical Climate Datasets
@@ -109,7 +111,7 @@ if run_audit:
             # --- VISUAL DASHBOARD GENERATION ---
             st.markdown(f"## 📊 Real-Time Diagnostic Hub: **{location_display}**")
             
-            # Row 1: Large Visual Metric Cards (Using Streamlit's clean native display)
+            # Row 1: Large Visual Metric Cards
             m1, m2, m3 = st.columns(3)
             m1.metric("🌡️ Atmospheric Temperature", f"{current_temp} °C")
             m2.metric("💧 Calculated Humidity Matrix", f"{current_humidity} %")
@@ -117,7 +119,7 @@ if run_audit:
             
             st.write("---")
             
-            # Row 2: Status Indicator Box with native Callout alerts
+            # Row 2: Status Indicator Box
             if predicted_stress_score > 48:
                 st.error(f"🚨 **CRITICAL RISK ASSESSMENT DETECTED**\n\nThe AeroVeda engine has registered a Crop Stress index of **{predicted_stress_score:.1f}/100**. Ground conditions match high-evapotranspiration curves. Recommendation: Activate adaptive canopy shading shields and automated micro-drip cycles.")
             else:
@@ -127,8 +129,6 @@ if run_audit:
             
             # Row 3: Interactive Visual Data Charts
             st.subheader("📈 Historical Climate Baseline Model Training Analytics (365-Day Wave)")
-            
-            # Dual column chart layout
             chart_col1, chart_col2 = st.columns(2)
             
             with chart_col1:
